@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
 
        
         Employee::create([
-            'email' => 'omar@devibrant.com',
+            'email' => 'kosaysolh0@gmail.com',
             'password' => Hash::make('123456'),
         ]);
     }
