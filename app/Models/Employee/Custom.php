@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Custom extends Model
 {
-    //
-}
+ protected $table = 'custom';
+
+    protected $fillable = [
+        'type',
+        'quantity',
+        'price',
+    ];}

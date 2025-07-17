@@ -8,6 +8,7 @@ return [
 
     'allowed_origins' => [
        'http://localhost:5173',       // React or Vite dev server
+       'http://localhost:5174',       // React or Vite dev server
     ],
 
     'allowed_origins_patterns' => [],

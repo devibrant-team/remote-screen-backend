@@ -45,8 +45,12 @@ $token = $user->createToken('employeeToken', ['Admin'], $expiryTime)->plainTextT
 }
 
 public function logout(Request $request)
-{  
-    $request->user()->currentAccessToken()->delete();
+{
+    $user = auth('sanctum')->user(); // Use sanctum guard explicitly if needed
+
+    if ($user && $user->currentAccessToken()) {
+        $user->currentAccessToken()->delete();
+    }
 
     return response()->json([
         'success' => true,

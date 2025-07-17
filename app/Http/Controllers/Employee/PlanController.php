@@ -18,12 +18,13 @@ class PlanController extends Controller
  public function store(PlanRequest $request){
 
      $data = $request->validated();
+       $data['access_num'] = 2; // ✅ force access_num = 2
  
       
         $user=auth()->user();
 
-       if (!$user || !$request->user()->tokenCan('admin')) {
-    return response()->json(['error' => 'Unauthorized'], 401);
+       if (!$user || !$request->user()->tokenCan('Admin')) {
+    return response()->json(['error' => 'Unauthorized1234'], 401);
 }
 
       $plan= Plan::create($data);

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('custom', function (Blueprint $table) {
             $table->id();
             $table->enum('type',['Screen','Storage']);
+            $table->decimal('quantity');
             $table->decimal('price');
             $table->timestamps();
         });
