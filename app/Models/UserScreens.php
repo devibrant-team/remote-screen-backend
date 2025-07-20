@@ -14,4 +14,19 @@ class UserScreens extends Model
         'group_id',
         'is_extra',
     ];
+
+         public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
+
+         public function screen()
+{
+    return $this->belongsTo(Screens::class);
+}
+         public function ratio()
+{
+    return $this->belongsTo(Ratio::class);
+}
 }

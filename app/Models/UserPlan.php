@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Employee\Plan;
 use Illuminate\Database\Eloquent\Model;
 
 class UserPlan extends Model
@@ -16,5 +17,20 @@ class UserPlan extends Model
         'payment_date' ,
         'expire_date' ,
      ];
+
+     public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
+
+     public function plan()
+{
+    return $this->belongsTo(Plan::class);
+}
+
+
+
+
 
 }

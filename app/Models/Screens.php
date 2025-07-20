@@ -15,4 +15,9 @@ protected $table = 'screens';
         'branch_id',
         'is_active',
     ];
+
+      public function ratio()
+    {
+        return $this->belongsTo(Ratio::class);
+    }
 }
