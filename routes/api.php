@@ -6,6 +6,7 @@ use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -32,3 +33,14 @@ Route::middleware('auth:sanctum')->get('/userscreen/{id}', [ScreenController::cl
 //screen
 Route::middleware('auth:sanctum')->get('/screenstatic', [ScreenController::class, 'screenStatic']);
 Route::middleware('auth:sanctum')->get('/screenStatus', [ScreenController::class, 'screenStatus']);
+
+
+Route::post('/screens/{id}/online', function ($id) {
+    DB::table('screens')->where('id', $id)->update(['is_active' => 1]);
+    return response()->json(['status' => 'online']);
+});
+
+Route::post('/screens/{id}/offline', function ($id) {
+    DB::table('screens')->where('id', $id)->update(['is_active' => 0]);
+    return response()->json(['status' => 'offline']);
+});
