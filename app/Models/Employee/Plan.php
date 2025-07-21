@@ -18,4 +18,9 @@ class Plan extends Model
         'is_recommended',
         'access_num',
     ];
+    public function userPlans()
+{
+    return $this->hasMany(\App\Models\UserPlan::class, 'plan_id');
+}
+
 }

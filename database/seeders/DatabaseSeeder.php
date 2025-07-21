@@ -17,12 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-       
+
         // Employee::create([
         //     'email' => 'kosaysolh0@gmail.com',
         //     'password' => Hash::make('123456'),
         // ]);
-
+          $this->call([
+        UserPlanSeeder::class,
+    ]);
         User::factory()->count(50)->create([
             'password' => Hash::make('password'), // Set a known password for all
             'is_verified' => true, // or false, depending on your app logic

@@ -14,12 +14,12 @@ class CustomController extends Controller
         $plan= Custom::all();
         return response()->json(["custom"=>$plan]);
     }
-    
+
  public function store(CustomRequest $request){
 
      $data = $request->validated();
- 
-      
+
+
         $user=auth()->user();
 
        if (!$user || !$request->user()->tokenCan('admin')) {
@@ -27,7 +27,7 @@ class CustomController extends Controller
 }
 
       $plan= Custom::create($data);
-  
+
         return response()->json(['success' => true , 'custom' =>$plan]);
 
 
@@ -35,27 +35,30 @@ class CustomController extends Controller
 
 
 
- public function update(CustomRequest $request,$id){
+ public function update(Request $request,$id){
 
-     $data = $request->validated();
- 
-     $plan = Plan::findOrFail($id);
+     $data = $request->validated([
+        'price'=>'required'
+     ]);
 
-     if(!$plan){
+     $custom = Custom::findOrFail($id);
+
+     if(!$custom){
 
          return response()->json(['error' => 'This plan does not exist'] );
      }
      $user=auth()->user();
-     
+
      if (!$user || !$request->user()->tokenCan('admin')) {
          return response()->json(['error' => 'Unauthorized'], 401);
 }
 
-      $updatedplan= Plan::update($data);
-  
-        return response()->json(['success' => true , 'plan' =>$updatedplan]);
+    $custom->update([
+        'price' => $data['price'],
+    ]);
+        return response()->json(['success' => true , 'custom' =>$custom]);
 
 
-    }
+}
 
 }
