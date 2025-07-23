@@ -10,19 +10,19 @@ class UserPlanSeeder extends Seeder
 {
     public function run(): void
     {
-        $plans = [1, 2, 3]; // Plan IDs
-        $userId = 5;
+        $plans = [4, 7]; // Plan IDs
+        $userId = 1;
         $expireDate = Carbon::create(2030, 7, 25);
 
         foreach ($plans as $planId) {
-            for ($i = 0; $i < 2; $i++) {
+            for ($i = 0; $i < 10; $i++) {
                 // Random date in June 2025
-                $day = rand(1, 30);
+                $day = rand(21, 22);
                 $hour = rand(0, 23);
                 $minute = rand(0, 59);
                 $second = rand(0, 59);
 
-                $createdAt = Carbon::create(2024, 7, $day, $hour, $minute, $second);
+                $createdAt = Carbon::create(2025, 7, $day, $hour, $minute, $second);
                 $updatedAt = (clone $createdAt)->addHours(rand(1, 12));
 
                 DB::table('user_plan')->insert([

@@ -10,55 +10,56 @@ use Illuminate\Http\Request;
 class CustomController extends Controller
 {
 
-    public function index (){
-        $plan= Custom::all();
-        return response()->json(["custom"=>$plan]);
+    public function index()
+    {
+        $plan = Custom::all();
+        return response()->json(["custom" => $plan]);
     }
 
- public function store(CustomRequest $request){
+    public function store(CustomRequest $request)
+    {
 
-     $data = $request->validated();
-
-
-        $user=auth()->user();
-
-       if (!$user || !$request->user()->tokenCan('admin')) {
-    return response()->json(['error' => 'Unauthorized'], 401);
-}
-
-      $plan= Custom::create($data);
-
-        return response()->json(['success' => true , 'custom' =>$plan]);
+        $data = $request->validated();
 
 
+        $user = auth()->user();
+
+        if (!$user || !$request->user()->tokenCan('Admin')) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $plan = Custom::create($data);
+
+        return response()->json(['success' => true, 'custom' => $plan]);
     }
 
 
 
- public function update(Request $request,$id){
+    public function update(Request $request, $id)
+    {
+        // Fix 1: Correct validate method
+        $data = $request->validate([
+            'price' => 'required|numeric'
+        ]);
 
-     $data = $request->validated([
-        'price'=>'required'
-     ]);
+        // Fix 2: findOrFail throws 404, no need to check manually
+        $custom = Custom::findOrFail($id);
 
-     $custom = Custom::findOrFail($id);
+        // Fix 3: Properly check token
+        $user = auth()->user();
 
-     if(!$custom){
+        if (!$user || !$request->user()->tokenCan('Admin')) {
+            return response()->json(['error' => '123456'], 401);
+        }
 
-         return response()->json(['error' => 'This plan does not exist'] );
-     }
-     $user=auth()->user();
+        // Update the custom price
+        $custom->update([
+            'price' => $data['price'],
+        ]);
 
-     if (!$user || !$request->user()->tokenCan('admin')) {
-         return response()->json(['error' => 'Unauthorized'], 401);
-}
-
-    $custom->update([
-        'price' => $data['price'],
-    ]);
-        return response()->json(['success' => true , 'custom' =>$custom]);
-
-
-}
-
+        return response()->json([
+            'success' => true,
+            'custom' => $custom
+        ]);
+    }
 }

@@ -29,7 +29,10 @@ class User extends Authenticatable
         'is_verified' => 'boolean',
         'password' => 'hashed',
     ];
-
+   public function userPlans()
+{
+    return $this->hasMany(UserPlan::class, 'plan_id');
+}
 
 
 

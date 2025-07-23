@@ -39,30 +39,34 @@ class ScreenController extends Controller
         ]);
     }
 
-    public function screenStatic()
-    {
-               $user = auth()->user();
+public function screenStatic()
+{
+    $user = auth()->user();
 
-        if (!$user || !$user->tokenCan('Admin')) {
-            return response()->json(['error' => 'Unauthorized1234'], 401);
-        }
-        $android = UserScreens::where('type', 'Android')->count();
-
-        $androidStick = UserScreens::where('type', 'Android Stick')->count();
-
-        $windows = UserScreens::where('type', 'Windows')->count();
-
-        $total = $android + $androidStick + $windows;
-
-        return response()->json([
-            'success' => true,
-            'total' => $total,
-            'android' => $android,
-            'android_stick' => $androidStick,
-            'windows' => $windows,
-
-        ]);
+    if (!$user || !$user->tokenCan('Admin')) {
+        return response()->json(['error' => 'Unauthorized1234'], 401);
     }
+
+    $android = UserScreens::where('type', 'Android')->count();
+    $androidStick = UserScreens::where('type', 'Android Stick')->count();
+    $windows = UserScreens::where('type', 'Windows')->count();
+
+    $total = $android + $androidStick + $windows;
+
+    $data = [
+        [ 'name' => 'Total Screens', 'value' => $total],
+        ['name' => 'Windows', 'value' => $windows],
+        ['name' => 'Android', 'value' => $android],
+        ['name' => 'Android-Stick', 'value' => $androidStick],
+    ];
+
+    return response()->json([
+        'success' => true,
+        // 'total' => $total,
+        'data' => $data,
+    ]);
+}
+
 
 
     public function screenStatus()

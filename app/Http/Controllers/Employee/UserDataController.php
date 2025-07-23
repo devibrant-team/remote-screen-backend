@@ -42,6 +42,11 @@ class UserDataController extends Controller
 
 public function getPlanOverview(Request $request)
 {
+      $user = auth()->user();
+
+        if (!$user || !$user->tokenCan('Admin')) {
+            return response()->json(['error' => 'Unauthorized1234'], 401);
+        }
     // Get extra prices
     $extraScreenPrice = \App\Models\Employee\Custom::where('type', 'Screen')->value('price');
     $extraStoragePrice = \App\Models\Employee\Custom::where('type', 'Storage')->value('price');
@@ -56,7 +61,7 @@ public function getPlanOverview(Request $request)
         'month' => 'nullable|integer|min:1|max:12',
         'day'   => 'nullable|integer|min:1|max:31',
     ]);
-
+    // return $request;
     $now = Carbon::now();
 
     // Handle time filters
@@ -140,19 +145,6 @@ public function getPlanOverview(Request $request)
         'success'             => true,
         'total_income'        => $totalIncome,
         'percent_change'  => $percentChange,
-        'extra_screen_price'  => $extraScreenPrice,
-        'extra_storage_price' => $extraStoragePrice,
-        'current_count'       => $currentCount,
-        'previous_count'      => $previousCount,
-        'comparison'          => [
-            'current'         => $currentCount,
-            'previous'        => $previousCount,
-            'based_on'        => [
-                'year'  => $year ?? null,
-                'month' => $month ?? null,
-                'day'   => $day ?? null,
-            ],
-        ],
     ]);
 }
 
@@ -162,83 +154,85 @@ public function getPlanOverview(Request $request)
 
 
 
-    public function getusersplan(Request $request)
-    {
-        $request->validate([
-            'plan_id' => 'required|integer|min:0',
-            'join' => 'nullable'
-        ]);
+public function getusersplan(Request $request)
+{
+    $request->validate([
+        'plan_id' => 'required|integer|min:0',
+        'join' => 'nullable|string'
+    ]);
 
-        $user = auth()->user();
+    $user = auth()->user();
 
-        if (!$user || !$request->user()->tokenCan('Admin')) {
-            return response()->json(['error' => 'Unauthorized1234'], 401);
-        }
-
-        $userPlan = [];
-
-        if ($request->join) {
-            [$year, $month] = explode('-', $request->join);
-        }
-
-        if ($request->plan_id == '0') {
-            if ($request->join) {
-                if ($year) {
-
-                    $userPlan = UserPlan::with('plan:id,name', 'user:id,name,email')
-                        ->whereYear('created_at', $year)
-                        ->paginate(1);
-                } else {
-                    $userPlan = UserPlan::with('plan:id,name', 'user:id,name,email')
-                        ->whereMonth('created_at', $month)
-                        ->paginate(1);
-                }
-            } else {
-                $userPlan = UserPlan::with('plan:id,name', 'user:id,name,email')
-                    ->paginate(1);
-            }
-        } else {
-            if ($request->join) {
-                if ($year) {
-
-                    $userPlan = UserPlan::where('plan_id', $request->plan_id)
-                        ->with('plan:id,name', 'user:id,name,email')
-                        ->whereYear('created_at', $year)
-                        ->paginate(1);
-                } else {
-                    $userPlan = UserPlan::where('plan_id', $request->plan_id)
-                        ->with('plan:id,name', 'user:id,name,email')
-                        ->whereMonth('created_at', $month)
-                        ->paginate(1);
-                }
-            } else {
-                $userPlan = UserPlan::where('plan_id', $request->plan_id)
-                    ->with('plan:id,name', 'user:id,name,email')
-                    ->paginate(1);
-            }
-        }
-
-        $formattedUsers = $userPlan->map(function ($user) {
-            return [
-                'id' => $user->user->id,
-                'name' => $user->user->name,
-                'email' => $user->user->email,
-                'plan_name' => $user->plan->name,
-                'used_storage' => $user->plan->used_storage,
-                'joined' => $user->created_at->format('Y-m-d'),
-                'expire' => $user->expire_date,
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'users' => $formattedUsers,
-            'current_page' => $userPlan->currentPage(),
-            'last_page' => $userPlan->lastPage(),
-            'total' => $userPlan->total(),
-            'per_page' => $userPlan->perPage(),
-        ]);
+    if (!$user || !$request->user()->tokenCan('Admin')) {
+        return response()->json(['error' => 'Unauthorized1234'], 401);
     }
+
+    $query = UserPlan::with('plan:id,name', 'user:id,name,email');
+
+    $planId = (int)$request->plan_id;
+    $join = $request->join;
+
+    $year = null;
+    $month = null;
+
+    // 🔍 Detect year/month from join
+    if ($join) {
+        $parts = explode('-', $join);
+
+        if (count($parts) === 2) {
+            // join = 2025-07
+            $year = (int)$parts[0];
+            $month = (int)$parts[1];
+        } elseif (strlen($join) === 4 && is_numeric($join)) {
+            // join = 2025
+            $year = (int)$join;
+        } elseif (is_numeric($join) && (int)$join >= 1 && (int)$join <= 12) {
+            // join = 07 or 7 (month only)
+            $month = (int)$join;
+            $year = (int)date('Y'); // use current year
+        }
+    }
+
+    // Filter by plan_id (if not 0)
+    if ($planId !== 0) {
+        $query->where('plan_id', $planId);
+    }
+
+    // Apply date filters
+    if ($year && $month) {
+        $query->whereYear('created_at', $year)
+              ->whereMonth('created_at', $month);
+    } elseif ($year) {
+        $query->whereYear('created_at', $year);
+    } elseif ($month) {
+        $query->whereYear('created_at', $year)->whereMonth('created_at', $month);
+    }
+
+    $userPlans = $query->paginate(10);
+
+    $formatted = $userPlans->map(function ($user) {
+        return [
+            'id' => $user->user->id ?? null,
+            'name' => $user->user->name ?? null,
+            'email' => $user->user->email ?? null,
+            'plan_name' => $user->plan->name ?? null,
+            'used_storage' => $user->plan->used_storage ?? null,
+            'joined' => optional($user->created_at)->format('Y-m-d'),
+            'expire' => $user->expire_date ?? null,
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'users' => $formatted,
+        'current_page' => $userPlans->currentPage(),
+        'last_page' => $userPlans->lastPage(),
+        'total' => $userPlans->total(),
+        'per_page' => $userPlans->perPage(),
+    ]);
+}
+
+
 
 
 

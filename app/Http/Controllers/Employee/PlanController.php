@@ -36,6 +36,51 @@ class PlanController extends Controller
             })
         ]);
     }
+    // this function to get the plan name with id
+
+    public function planName()
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->tokenCan('Admin')) {
+            return response()->json(['error' => 'Unauthorized1234'], 401);
+        }
+        $plans = Plan::withCount('userPlans') // this gives us user_plans_count
+            ->get(['id', 'name', 'price']);
+
+        return response()->json([
+            'plans' => $plans->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                ];
+            })
+        ]);
+    }
+
+
+    public function getAllPlansWithUserPricing()
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->tokenCan('Admin')) {
+            return response()->json(['error' => 'Unauthorized1234'], 401);
+        }
+        $plans = Plan::withCount('userPlans') // this gives us user_plans_count
+            ->get(['id', 'name']);
+
+
+        return response()->json([
+            'plans' => $plans->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'user_count' => $plan->user_plans_count,
+                     'total_income' => $plan->price * $plan->user_plans_count, // 🧮 key line
+                ];
+            })
+        ]);
+    }
 
 
     public function store(PlanRequest $request)
