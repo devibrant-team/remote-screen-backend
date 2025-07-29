@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('ratio_id')->constrained('ratio');
             $table->foreignId('branch_id')->constrained('branches');
             $table->boolean('is_active');
+            $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();
         });
     }

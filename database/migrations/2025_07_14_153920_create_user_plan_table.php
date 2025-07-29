@@ -19,9 +19,11 @@ return new class extends Migration
             $table->integer('extra_screens');
             $table->decimal('extra_space');
             $table->integer('num_screen');
+            $table->decimal('storage');
             $table->decimal('used_storage');
             $table->date('payment_date');
             $table->date('expire_date');
+            $table->enum('payment_type',['visa','card']);
             $table->timestamps();
         }
     );

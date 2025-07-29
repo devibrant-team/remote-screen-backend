@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('groups', function (Blueprint $table) {
+        Schema::create('list_item_style', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('branch_id')->constrained('branches');
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('ratio_id')->nullable()->constrained('ratio');
-            $table->integer('screen_number');
+            $table->string('type');
             $table->timestamps();
         });
     }
@@ -27,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('groups');
+        Schema::dropIfExists('list_item_style');
     }
 };
