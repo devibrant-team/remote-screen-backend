@@ -5,6 +5,7 @@ use App\Http\Controllers\Employee\CustomController;
 use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
+use App\Http\Controllers\user\portfolio\AuthController as PortfolioAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -49,3 +50,6 @@ Route::post('/screens/{id}/offline', function ($id) {
 });
 
 
+// user login & signup  portofolio 
+Route::post('/portofolio/signup', [PortfolioAuthController::class, 'signup']);
+Route::post('/portofolio/login', [PortfolioAuthController::class, 'login']);
