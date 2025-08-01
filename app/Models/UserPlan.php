@@ -14,8 +14,12 @@ class UserPlan extends Model
         'plan_id',
         'extra_screens',
         'extra_space' ,
-        'payment_date' ,
+        'num_screen',
+        'used_screen',
+        'storage',
+        'used_storage',
         'expire_date' ,
+        'payment_type'
      ];
 
      public function user()

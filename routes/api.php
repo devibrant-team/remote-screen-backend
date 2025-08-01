@@ -5,7 +5,9 @@ use App\Http\Controllers\Employee\CustomController;
 use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
-use App\Http\Controllers\user\portfolio\AuthController as PortfolioAuthController;
+use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
+use App\Http\Controllers\User\portfolio\AuthController as PortfolioAuthController;
+use App\Http\Controllers\user\portfolio\PlanUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -49,7 +51,17 @@ Route::post('/screens/{id}/offline', function ($id) {
     return response()->json(['status' => 'offline']);
 });
 
-
+//portofolio
 // user login & signup  portofolio 
 Route::post('/portofolio/signup', [PortfolioAuthController::class, 'signup']);
 Route::post('/portofolio/login', [PortfolioAuthController::class, 'login']);
+
+
+// plan purchase 
+
+Route::middleware('auth:sanctum')->get('/plan_parchase', [PlanUserController::class, 'store']);
+
+
+
+// dashboard login 
+Route::post('/dashboard/login', [DashboardAuthController::class, 'login']);

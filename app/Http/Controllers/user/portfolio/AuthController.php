@@ -57,7 +57,7 @@ class AuthController extends Controller
     }
 
 // $expiryTime = Carbon::now()->addHours(8); 
-$token = $user->createToken('userToken', ['user_portfolio'])->plainTextToken;
+   $token = $user->createToken('userToken', ['user_portfolio'])->plainTextToken;
 
 
     // $token = $user->createToken('authToken')->plainTextToken;
