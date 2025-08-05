@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('playlist_item', function (Blueprint $table) {
             $table->id();
             $table->foreignId('playlist_id')->constrained('playlist');
-            $table->foreignId('style_id')->constrained('list_item_style');
+            $table->foreignId('grid_id')->constrained('list_item_style');
             $table->enum('transition',['fade']);
             $table->integer('index');
             $table->integer('duration');

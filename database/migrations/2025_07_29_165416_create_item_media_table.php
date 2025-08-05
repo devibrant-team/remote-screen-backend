@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('item_media', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained('playlist_item');
+            $table->foreignId('playlist_item_id')->constrained('playlist_item');
             $table->foreignId('media_id')->constrained('media');
+            $table->enum('scale',['fite','fill','blur','original']);
             $table->integer('index');
             $table->timestamps();
         });

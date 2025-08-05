@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('media', function (Blueprint $table) {
             $table->id();
             $table->enum('type',['image','video','gif']);
+            $table->foreignId('user_id')->constrained('users');
             $table->foreignId('widget_id')->constrained('widget_details');
+            $table->string('media');
             $table->decimal('storage');
             $table->timestamps();
         });

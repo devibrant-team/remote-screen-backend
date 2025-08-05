@@ -51,17 +51,4 @@ Route::post('/screens/{id}/offline', function ($id) {
     return response()->json(['status' => 'offline']);
 });
 
-//portofolio
-// user login & signup  portofolio 
-Route::post('/portofolio/signup', [PortfolioAuthController::class, 'signup']);
-Route::post('/portofolio/login', [PortfolioAuthController::class, 'login']);
 
-
-// plan purchase 
-
-Route::middleware('auth:sanctum')->get('/plan_parchase', [PlanUserController::class, 'store']);
-
-
-
-// dashboard login 
-Route::post('/dashboard/login', [DashboardAuthController::class, 'login']);
