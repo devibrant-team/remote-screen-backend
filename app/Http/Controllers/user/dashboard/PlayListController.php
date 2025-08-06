@@ -18,7 +18,7 @@ class PlayListController extends Controller
 {
     $request->validate([
         'name' => 'required|string',
-        'style_id' => 'required|integer',
+        'type' => 'required|integer',
         'slides_number' => 'required|integer',
         'total_duration' => 'required|integer',
         'slides' => 'required|array',
@@ -29,7 +29,7 @@ class PlayListController extends Controller
     $playlist = Playlist::create([
         'name' => $request->name,
         'user_id' => $user->id,
-        'style_id' => $request->style_id,
+        'style_id' => $request->type,
         'duration' => $request->total_duration,
         'slide_number' => $request->slides_number,
     ]);
@@ -95,7 +95,6 @@ class PlayListController extends Controller
         'name' => 'required|string',
         'style_id' => 'required|integer',
         'slides_number' => 'required|integer',
-        'total_duration' => 'required|integer',
         'slides' => 'required|array',
     ]);
 
@@ -112,18 +111,16 @@ class PlayListController extends Controller
     foreach ($request->slides as $slideIndex => $slideData) {
         $slide = PlaylistItem::create([
             'playlist_id' => $playlist->id,
-            'duration' => $slideData['duration'],
-            'grid_style' => $slideData['grid_style'],
-            'transition' => $slideData['transition'],
+            'duration' => 0,
             'index' => $slideData['index'],
         ]);
 
-        foreach ($slideData['list_media'] as $mediaIndex => $media) {
+  
             $media_id = $media['media_id'] ?? null;
 
             // Create new media if no media_id and media_url exists (as a file input name)
-            if (!$media_id && $request->hasFile("slides.$slideIndex.list_media.$mediaIndex.media_url")) {
-                $file = $request->file("slides.$slideIndex.list_media.$mediaIndex.media_url");
+            if (!$media_id && $request->hasFile("slides.$slideIndex.list_media.$slideIndex.media_url")) {
+                $file = $request->file("slides.$slideIndex.list_media.$slideIndex.media_url");
 
                 $imageName = Str::random(20) . '.' . $file->getClientOriginalExtension();
                 $path = public_path("image/{$user->name}/{$request->name}");
@@ -139,9 +136,8 @@ class PlayListController extends Controller
                 $imageSize = round(filesize($path . '/' . $imageName) / 1024, 2); // KB
 
                 $createdMedia = Media::create([
-                    'type' => $media['media_type'],
+                    'type' => $slideData['media_type'],
                     'user_id' => $user->id,
-                    'widget_id' => $media['widget'],
                     'media' => $imageUrl,
                     'storage' => $imageSize,
                 ]);
@@ -151,11 +147,10 @@ class PlayListController extends Controller
 
             MediaItem::create([
                 'slide_id' => $slide->id,
-                'scale' => $media['scale'],
-                'index' => $media['index'],
+                'index' => 0,
                 'media_id' => $media_id,
             ]);
-        }
+        
     }
 
     return response()->json(['message' => 'Playlist created successfully']);
