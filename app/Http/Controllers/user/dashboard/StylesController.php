@@ -7,9 +7,11 @@ use App\Models\PlaylistStyle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class StylesController extends Controller {
+class StylesController extends Controller
+{
 
-    public function getPlayListStyle( Request $request ) {
+    public function getPlayListStyle(Request $request)
+    {
 
         // $user = auth()->user();
 
@@ -18,16 +20,7 @@ class StylesController extends Controller {
         //     }
 
         $playListStyle = PlaylistStyle::all();
-        return response()->json( [ 'playListStyle' => $playListStyle ] );
+        return response()->json(['playListStyle' => $playListStyle]);
     }
 
-    public function getInteractive() {
-        $interactive = DB::table( 'playlist_style' )
-        ->whereIn( 'type', [ 'interactive_1', 'interactive_2' ] )
-        ->get();
-
-        return response()->json( [
-            'interactive' => $interactive
-        ] );
-    }
 }

@@ -71,4 +71,3 @@ Route::post('/dashboard/login', [DashboardAuthController::class, 'login']);
 // getplayList Style
 
 Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); //should auth
-Route::get('/interactive', [StylesController::class, 'getInteractive']);
