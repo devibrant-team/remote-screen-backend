@@ -53,21 +53,22 @@ Route::post('/screens/{id}/offline', function ($id) {
 });
 
 //portofolio
-// user login & signup  portofolio 
+// user login & signup  portofolio
 Route::post('/portofolio/signup', [PortfolioAuthController::class, 'signup']);
 Route::post('/portofolio/login', [PortfolioAuthController::class, 'login']);
 
 
-// plan purchase 
+// plan purchase
 
 Route::middleware('auth:sanctum')->get('/plan_parchase', [PlanUserController::class, 'store']);
 
 
 
-// dashboard login 
+// dashboard login
 Route::post('/dashboard/login', [DashboardAuthController::class, 'login']);
 
 
-// getplayList Style 
+// getplayList Style
 
 Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); //should auth
+Route::get('/interactive', [StylesController::class, 'getInteractive']);
