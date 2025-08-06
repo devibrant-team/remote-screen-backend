@@ -12,4 +12,5 @@ class Media extends Model
         'type',
         'widget_id',
         'storage',
-    ];}
+    ];
+}
