@@ -22,7 +22,7 @@ class StylesController extends Controller {
     }
 
     public function getInteractive() {
-        $interactive = DB::table( 'interactives' )
+        $interactive = DB::table( 'playlist_style' )
         ->whereIn( 'type', [ 'interactive_1', 'interactive_2' ] )
         ->get();
 
