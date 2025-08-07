@@ -71,3 +71,7 @@ Route::post('/dashboard/login', [DashboardAuthController::class, 'login']);
 // getplayList Style
 
 Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); //should auth
+
+// grid Style
+Route::get('/getgridStyle', [StylesController::class, 'getGridStyle']); //should auth
+
