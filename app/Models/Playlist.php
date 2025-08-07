@@ -16,4 +16,17 @@ class Playlist extends Model
       'duration',  
       'slide_number',
     ];
+
+      public function playListItems()
+    {
+        return $this->hasMany(PlaylistItem::class, 'playlist_id');
+    }
+
+    // Each playlist BELONGS TO one style
+    public function planListStyle()
+    {
+        return $this->belongsTo(PlaylistStyle::class, 'style_id');
+    }
+
+
 }

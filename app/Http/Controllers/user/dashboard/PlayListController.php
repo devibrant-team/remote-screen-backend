@@ -14,6 +14,47 @@ use Illuminate\Http\Request;
 class PlayListController extends Controller
 {
 
+public function index(Request $request)
+{
+    // $user = auth()->user();
+
+    // if (!$user || !$request->user()->tokenCan('user_dashboard')) {
+    //     return response()->json(['error' => 'Unauthorized'], 401);
+    // }
+
+    $playlists = Playlist::with([
+        'planListStyle:id,type',
+        'playListItems.playListItemStyle:id,type',
+        'playListItems.itemMedia.media:id,type,media'
+    ])->where('user_id', 1)->get();
+
+    $formattedPlaylists = $playlists->map(function ($playlist) {
+        $firstItem = $playlist->playListItems->first();
+        $firstMedia = $firstItem?->itemMedia->first();
+
+        return [
+            'id' => $playlist->id,
+            'name' => $playlist->name,
+            'playListStyle' => $playlist->planListStyle->type ?? null,
+            'duration' => $playlist->duration,
+            'slide_number' => $playlist->slide_number,
+            'grid' => $firstItem?->playListItemStyle?->type ?? null,
+            'media' => $firstMedia?->media?->media ?? null,
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'playLists' => $formattedPlaylists,
+    ]);
+}
+
+
+
+
+
+
+
     public function storeNormal(Request $request)
 {
     $request->validate([

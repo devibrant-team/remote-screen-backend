@@ -15,4 +15,15 @@ class PlaylistItem extends Model
         'index',
         'duration',
     ];
+
+    public function playListItemStyle()
+    {
+        return $this->belongsTo(ListItemStyle::class, 'grid_id');
+    }
+
+    public function itemMedia()
+    {
+        return $this->hasMany(ItemMedia::class, 'playlist_item_id');
+    }
+
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
+use App\Http\Controllers\User\dashboard\PlayListController;
 use App\Http\Controllers\User\dashboard\StylesController;
 use App\Http\Controllers\User\portfolio\AuthController as PortfolioAuthController;
 use App\Http\Controllers\user\portfolio\PlanUserController;
@@ -75,3 +76,5 @@ Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); 
 // grid Style
 Route::get('/getgridStyle', [StylesController::class, 'getGridStyle']); //should auth
 
+
+Route::get('/getuser/playlist', [PlayListController::class, 'index']); //should auth
