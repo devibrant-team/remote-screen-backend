@@ -14,6 +14,7 @@ class PlaylistItem extends Model
         'transition',
         'index',
         'duration',
+        'grid_id',
     ];
 
     public function playListItemStyle()

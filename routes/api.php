@@ -78,3 +78,9 @@ Route::get('/getgridStyle', [StylesController::class, 'getGridStyle']); //should
 
 
 Route::get('/getuser/playlist', [PlayListController::class, 'index']); //should auth
+
+
+// playlist item 
+Route::post('/postinteractive', [PlayListController::class, 'storeInteractive']);
+
+Route::post('/postNormal', [PlayListController::class, 'storeNormal']);

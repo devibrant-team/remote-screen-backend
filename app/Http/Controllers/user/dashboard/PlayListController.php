@@ -10,7 +10,7 @@ use App\Models\PlaylistItem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 class PlayListController extends Controller
 {
 
@@ -60,69 +60,72 @@ public function index(Request $request)
     $request->validate([
         'name' => 'required|string',
         'type' => 'required|integer',
-        'slides_number' => 'required|integer',
+        'NumberOfSlides' => 'required|integer',
         'total_duration' => 'required|integer',
         'slides' => 'required|array',
     ]);
-
-    $user = auth()->user();
+Log::info($request);
+    // $user = auth()->user();
 
     $playlist = Playlist::create([
         'name' => $request->name,
-        'user_id' => $user->id,
+        'user_id' => 1,
         'style_id' => $request->type,
         'duration' => $request->total_duration,
-        'slide_number' => $request->slides_number,
+        'slide_number' => $request->NumberOfSlides,
     ]);
 
     foreach ($request->slides as $slideIndex => $slideData) {
-        $slide = PlaylistItem::create([
-            'playlist_id' => $playlist->id,
-            'duration' => $slideData['duration'],
-            'grid_style' => $slideData['grid_style'],
-            'transition' => $slideData['transition'],
-            'index' => $slideData['index'],
-        ]);
+    $slide = PlaylistItem::create([
+        'playlist_id' => $playlist->id,
+        'duration' => $slideData['duration'],
+        'grid_id' => $slideData['grid_style'],
+        'transition' => 'fade',
+        'index' => $slideData['index'],
+    ]);
 
-        foreach ($slideData['list_media'] as $mediaIndex => $media) {
-            $media_id = $media['media_id'] ?? null;
+    foreach ($slideData['slots'] as $slotIndex => $slot) {
+        $media_id = $slot['media_id'] ?? null;
+        $media_id = $media_id === 'null' ? null : $media_id;
 
-            // Create new media if no media_id and media_url exists (as a file input name)
-            if (!$media_id && $request->hasFile("slides.$slideIndex.list_media.$mediaIndex.media_url")) {
-                $file = $request->file("slides.$slideIndex.list_media.$mediaIndex.media_url");
+        // Check if there's an uploaded file for this slot
+        if (!$media_id && $request->hasFile("slides.$slideIndex.slots.$slotIndex.media")) {
+            $file = $request->file("slides.$slideIndex.slots.$slotIndex.media");
 
-                $imageName = Str::random(20) . '.' . $file->getClientOriginalExtension();
-                $path = public_path("image/{$user->name}/{$request->name}");
+            $imageName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+            $path = public_path("image/omar/{$request->name}");
 
-                if (!File::exists($path)) {
-                    File::makeDirectory($path, 0777, true);
-                }
-
-                $file->move($path, $imageName);
-
-                $relativePath = "image/{$user->name}/{$request->name}/$imageName";
-                $imageUrl = asset($relativePath);
-                $imageSize = round(filesize($path . '/' . $imageName) / 1024, 2); // KB
-
-                $createdMedia = Media::create([
-                    'type' => $media['media_type'],
-                    'user_id' => $user->id,
-                    'widget_id' => $media['widget'],
-                    'media' => $imageUrl,
-                    'storage' => $imageSize,
-                ]);
-
-                $media_id = $createdMedia->id;
+            if (!File::exists($path)) {
+                File::makeDirectory($path, 0777, true);
             }
 
-            MediaItem::create([
-                'slide_id' => $slide->id,
-                'scale' => $media['scale'],
-                'index' => $media['index'],
-                'media_id' => $media_id,
+            $file->move($path, $imageName);
+
+            $relativePath = "image/omar/{$request->name}/$imageName";
+            $imageUrl = asset($relativePath);
+            $imageSize = round(filesize($path . '/' . $imageName) / 1024, 2); // KB
+
+            $createdMedia = Media::create([
+                'type' => $slot['mediaType'], // <-- changed to $slot
+                'user_id' => 1,
+                'widget_id' => 1,
+                'media' => $imageUrl,
+                'storage' => $imageSize,
             ]);
+
+            $media_id = $createdMedia->id;
         }
+
+        // Save media item
+        MediaItem::create([
+            'playlist_item_id' => $slide->id,
+            'scale' => $slot['scale'],
+            'index' => $slot['index'],
+            'media_id' => $media_id,
+        ]);
     }
+}
+
 
     return response()->json(['message' => 'Playlist created successfully']);
 }
@@ -132,10 +135,11 @@ public function index(Request $request)
 
   public function storeInteractive(Request $request)
 {
+    // return $request;
     $request->validate([
         'name' => 'required|string',
         'style_id' => 'required|integer',
-        'slides_number' => 'required|integer',
+        'slide_number' => 'required|integer',
         'slides' => 'required|array',
     ]);
 
@@ -143,12 +147,12 @@ public function index(Request $request)
 
     $playlist = Playlist::create([
         'name' => $request->name,
-        'user_id' => $user->id,
+        'user_id' => 1,
         'style_id' => $request->style_id,
-        'duration' => $request->total_duration,
-        'slide_number' => $request->slides_number,
+        'duration' => 0,
+        'slide_number' => $request->slide_number,
     ]);
-
+    // return $playlist->id;
     foreach ($request->slides as $slideIndex => $slideData) {
         $slide = PlaylistItem::create([
             'playlist_id' => $playlist->id,
@@ -157,14 +161,15 @@ public function index(Request $request)
         ]);
 
   
-            $media_id = $media['media_id'] ?? null;
+     $media_id = ($slideData['media_id'] ?? null);
+$media_id = $media_id === 'null' ? null : $media_id;
 
             // Create new media if no media_id and media_url exists (as a file input name)
-            if (!$media_id && $request->hasFile("slides.$slideIndex.list_media.$slideIndex.media_url")) {
-                $file = $request->file("slides.$slideIndex.list_media.$slideIndex.media_url");
-
+            if (!$media_id && $request->hasFile("slides.$slideIndex.media")) {
+                $file =  $request->file("slides.$slideIndex.media");
+               
                 $imageName = Str::random(20) . '.' . $file->getClientOriginalExtension();
-                $path = public_path("image/{$user->name}/{$request->name}");
+                $path = public_path("image/omar/{$request->name}");
 
                 if (!File::exists($path)) {
                     File::makeDirectory($path, 0777, true);
@@ -172,25 +177,29 @@ public function index(Request $request)
 
                 $file->move($path, $imageName);
 
-                $relativePath = "image/{$user->name}/{$request->name}/$imageName";
+                $relativePath = "image/omar/{$request->name}/$imageName";
                 $imageUrl = asset($relativePath);
                 $imageSize = round(filesize($path . '/' . $imageName) / 1024, 2); // KB
 
                 $createdMedia = Media::create([
-                    'type' => $slideData['media_type'],
-                    'user_id' => $user->id,
+                    'type' => 'image',
+                    'user_id' => 1,
                     'media' => $imageUrl,
                     'storage' => $imageSize,
+                    'widget_id'=>1,
                 ]);
 
                 $media_id = $createdMedia->id;
             }
-
-            MediaItem::create([
-                'slide_id' => $slide->id,
+            // return 'return'.$media_id;
+             MediaItem::create([
+                'playlist_item_id' => $slide->id,
                 'index' => 0,
                 'media_id' => $media_id,
             ]);
+
+
+
         
     }
 
