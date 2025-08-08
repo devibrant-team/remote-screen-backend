@@ -50,6 +50,54 @@ public function index(Request $request)
 }
 
 
+public function show(Request $request, $id)
+{
+    // Optional auth
+    // $user = auth()->user();
+    // if (!$user || !$request->user()->tokenCan('user_dashboard')) {
+    //     return response()->json(['error' => 'Unauthorized'], 401);
+    // }
+
+    $playlist = Playlist::with([
+        'planListStyle:id,type',
+        'playListItems.playListItemStyle:id,type',
+        'playListItems.itemMedia.media:id,type,media',
+    ])->findOrFail($id); // Get the selected playlist by ID
+
+    $formattedPlaylist = [
+        'id' => $playlist->id,
+        'name' => $playlist->name,
+        'duration' => $playlist->duration,
+        'slide_number' => $playlist->slide_number,
+        'style' => $playlist->planListStyle?->type ?? null,
+        'items' => $playlist->playListItems->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'transition' => $item->transition,
+                'duration' => $item->duration,
+                'index' => $item->index,
+                'grid' => $item->playListItemStyle?->type ?? null,
+                'mediaItems' => $item->itemMedia->map(function ($mediaItem) {
+                    return [
+                        'id' => $mediaItem->id,
+                        'index' => $mediaItem->index,
+                        'scale' => $mediaItem->scale,
+                        'media' => [
+                            'id' => $mediaItem->media?->id,
+                            'type' => $mediaItem->media?->type,
+                            'url' => $mediaItem->media?->media,
+                        ],
+                    ];
+                }),
+            ];
+        }),
+    ];
+
+    return response()->json([
+        'success' => true,
+        'playlist' => $formattedPlaylist,
+    ]);
+}
 
 
 
@@ -204,6 +252,20 @@ $media_id = $media_id === 'null' ? null : $media_id;
     }
 
     return response()->json(['message' => 'Playlist created successfully']);
+}
+
+
+
+public function getMedia(Request $request){
+    $user = auth()->user();
+
+    // if (!$user || !$request->user()->tokenCan('user_dashboard')) {
+    //     return response()->json(['error' => 'Unauthorized'], 401);
+    // }
+    $media = Media::where('user_id',1)->get();
+    return response()->json(['success' =>true,'media'=>$media]);
+
+
 }
 
 

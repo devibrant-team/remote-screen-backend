@@ -84,3 +84,8 @@ Route::get('/getuser/playlist', [PlayListController::class, 'index']); //should 
 Route::post('/postinteractive', [PlayListController::class, 'storeInteractive']);
 
 Route::post('/postNormal', [PlayListController::class, 'storeNormal']);
+
+
+Route::get('/getuser/media', [PlayListController::class, 'getMedia']); //should auth
+
+Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
