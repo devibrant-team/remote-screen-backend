@@ -112,7 +112,7 @@ public function show(Request $request, $id)
         'total_duration' => 'required|integer',
         'slides' => 'required|array',
     ]);
-Log::info($request);
+
     // $user = auth()->user();
 
     $playlist = Playlist::create([
@@ -137,8 +137,8 @@ Log::info($request);
         $media_id = $media_id === 'null' ? null : $media_id;
 
         // Check if there's an uploaded file for this slot
-        if (!$media_id && $request->hasFile("slides.$slideIndex.slots.$slotIndex.media")) {
-            $file = $request->file("slides.$slideIndex.slots.$slotIndex.media");
+        if (!$media_id && $request->hasFile("slides.$slideIndex.slots.$slotIndex.ImageFile")) {
+            $file = $request->file("slides.$slideIndex.slots.$slotIndex.ImageFile");
 
             $imageName = Str::random(20) . '.' . $file->getClientOriginalExtension();
             $path = public_path("image/omar/{$request->name}");

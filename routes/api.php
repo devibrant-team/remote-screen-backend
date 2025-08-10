@@ -7,6 +7,7 @@ use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
 use App\Http\Controllers\User\dashboard\PlayListController;
+use App\Http\Controllers\User\dashboard\ScreenManagmentController;
 use App\Http\Controllers\User\dashboard\StylesController;
 use App\Http\Controllers\User\portfolio\AuthController as PortfolioAuthController;
 use App\Http\Controllers\user\portfolio\PlanUserController;
@@ -89,3 +90,6 @@ Route::post('/postNormal', [PlayListController::class, 'storeNormal']);
 Route::get('/getuser/media', [PlayListController::class, 'getMedia']); //should auth
 
 Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
+
+// ratio 
+Route::middleware('auth:sanctum')->get('/userratio', [ScreenManagmentController::class, 'getRatio']);
