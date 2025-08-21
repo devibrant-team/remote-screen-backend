@@ -7,6 +7,7 @@ use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
+use App\Http\Controllers\User\dashboard\BranchController;
 use App\Http\Controllers\User\dashboard\PlayListController;
 use App\Http\Controllers\User\dashboard\ScreenManagmentController;
 use App\Http\Controllers\User\dashboard\StylesController;
@@ -108,3 +109,6 @@ Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
 
 
 
+// branch
+Route::middleware('auth:sanctum')->post('/insertbranch', [BranchController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/getbranch', [BranchController::class, 'store']);
