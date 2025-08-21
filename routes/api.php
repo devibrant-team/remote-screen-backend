@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Employee\AdsController;
 use App\Http\Controllers\Employee\AuthController;
 use App\Http\Controllers\Employee\CustomController;
 use App\Http\Controllers\Employee\PlanController;
@@ -25,6 +26,13 @@ Route::middleware('auth:sanctum')->get('/planName', [PlanController::class, 'pla
 
 Route::middleware('auth:sanctum')->post('/insertplan', [PlanController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/updateplan/{id}', [PlanController::class, 'update']);
+
+
+// ads
+Route::get('/getads',[AdsController::class,'index']);
+Route::middleware('auth:sanctum')->post('/insertads',[AdsController::class,'store']);
+
+
 // custom
 Route::get('/getcustom', [CustomController::class, 'index']);
 Route::middleware('auth:sanctum')->put('/updatecustom/{id}', [CustomController::class, 'update']);
@@ -78,18 +86,25 @@ Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); 
 Route::get('/getgridStyle', [StylesController::class, 'getGridStyle']); //should auth
 
 
-Route::get('/getuser/playlist', [PlayListController::class, 'index']); //should auth
+Route::get('/getuser/playlistnormal', [PlayListController::class, 'getNormal']); //should auth
+Route::get('/getuser/playlistinteractive', [PlayListController::class, 'getInteractive']); //should auth
 
 
 // playlist item 
 Route::post('/postinteractive', [PlayListController::class, 'storeInteractive']);
 
-Route::post('/postNormal', [PlayListController::class, 'storeNormal']);
+Route::middleware('auth:sanctum')->post('/postNormal', [PlayListController::class, 'storeNormal']);
 
 
-Route::get('/getuser/media', [PlayListController::class, 'getMedia']); //should auth
+Route::middleware('auth:sanctum')->get('/getuser/media', [PlayListController::class, 'getMedia']); //should auth
+Route::get('/getscale', [PlayListController::class, 'getscale']); //should auth
 
 Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
 
 // ratio 
 Route::middleware('auth:sanctum')->get('/userratio', [ScreenManagmentController::class, 'getRatio']);
+Route::post('/create/screen',[ScreenManagmentController::class,'createScreen']);
+Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
+
+
+

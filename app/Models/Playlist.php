@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Playlist extends Model
 {
@@ -15,6 +16,7 @@ class Playlist extends Model
       'style_id',  
       'duration',  
       'slide_number',
+      'ratio_id'
     ];
 
       public function playListItems()
@@ -28,5 +30,10 @@ class Playlist extends Model
         return $this->belongsTo(PlaylistStyle::class, 'style_id');
     }
 
+    public function schedules(): HasMany
+    {
+        // FK is playlist_id by your schema
+        return $this->hasMany(Schedule::class, 'playlist_id', 'id');
+    }
 
 }

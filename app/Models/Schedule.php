@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Schedule extends Model
 {
@@ -17,4 +18,10 @@ class Schedule extends Model
         'start_time',
         'end_time',
     ];
+
+    public function playlist(): BelongsTo
+    {
+        return $this->belongsTo(Playlist::class, 'playlist_id', 'id');
+    }
+    
 }

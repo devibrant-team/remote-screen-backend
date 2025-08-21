@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('playlist', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('ratio_id')->constrained('ratio');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('style_id')->constrained('playlist_style');
             $table->integer('duration');

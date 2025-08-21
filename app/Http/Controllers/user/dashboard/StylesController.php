@@ -36,7 +36,7 @@ class StylesController extends Controller
         return response()->json(['gridStyle' => $gridstyle]);
         
 
-    }api
+    }
 
 
 }

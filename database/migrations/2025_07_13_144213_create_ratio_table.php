@@ -16,6 +16,8 @@ return new class extends Migration
             $table->decimal('width');
             $table->decimal('height');
             $table->string('ratio');
+            $table->decimal('numerator');
+            $table->decimal('denominator');
             $table->foreignId('user_id')->constrained('users');
             $table->timestamps();
         });

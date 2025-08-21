@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('widget_details', function (Blueprint $table) {
+        Schema::create('ads', function (Blueprint $table) {
             $table->id();
-            $table->enum('type',['oclock','weather']);
-            $table->string('city');
-            $table->enum('position',['center','top_right','top_left','bottom_right','bottom_left','center_right','center_left']);
+            $table->string('media');
+            $table->string('media_type');
+            $table->string('description');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('widget_details');
+        Schema::dropIfExists('ads');
     }
 };

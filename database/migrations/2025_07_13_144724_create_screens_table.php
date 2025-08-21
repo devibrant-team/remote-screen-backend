@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('screens', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('code')->unique();
-            $table->foreignId('ratio_id')->constrained('ratio');
-            $table->foreignId('branch_id')->constrained('branches');
+            $table->integer('code')->nullable()->unique();
+            $table->foreignId('ratio_id')->nullable()->constrained('ratio');
+            $table->foreignId('branch_id')->nullable()->constrained('branches');
             $table->boolean('is_active');
             $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();
