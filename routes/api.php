@@ -9,6 +9,7 @@ use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
 use App\Http\Controllers\User\dashboard\BranchController;
 use App\Http\Controllers\User\dashboard\PlayListController;
+use App\Http\Controllers\User\dashboard\RatioController;
 use App\Http\Controllers\User\dashboard\ScreenManagmentController;
 use App\Http\Controllers\User\dashboard\StylesController;
 use App\Http\Controllers\User\portfolio\AuthController as PortfolioAuthController;
@@ -103,7 +104,6 @@ Route::get('/getscale', [PlayListController::class, 'getscale']); //should auth
 Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
 
 // ratio 
-Route::middleware('auth:sanctum')->get('/userratio', [ScreenManagmentController::class, 'getRatio']);
 Route::post('/create/screen',[ScreenManagmentController::class,'createScreen']);
 Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
 
@@ -111,4 +111,11 @@ Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
 
 // branch
 Route::middleware('auth:sanctum')->post('/insertbranch', [BranchController::class, 'store']);
-Route::middleware('auth:sanctum')->get('/getbranch', [BranchController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/getbranch', [BranchController::class, 'index']);
+Route::middleware('auth:sanctum')->put('/getbranch', [BranchController::class, 'update']);
+
+
+// ratio
+Route::middleware('auth:sanctum')->get('/getratio', [RatioController::class, 'getRatio']);
+Route::middleware('auth:sanctum')->post('/insertratio', [RatioController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/updateratio', [RatioController::class, 'update']);

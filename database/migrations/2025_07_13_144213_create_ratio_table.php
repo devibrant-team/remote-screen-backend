@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('ratio', function (Blueprint $table) {
             $table->id();
-            $table->decimal('width');
-            $table->decimal('height');
+            $table->decimal('width')->nullable();
+            $table->decimal('height')->nullable();
             $table->string('ratio');
             $table->decimal('numerator');
             $table->decimal('denominator');

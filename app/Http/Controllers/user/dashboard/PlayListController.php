@@ -163,40 +163,46 @@ public function getInteractive(Request $request)
     $tz  = 'Asia/Beirut';
     $now = Carbon::now($tz);
 
-    $playlists = Playlist::with([
-        'planListStyle:id,type',
-        'playListItems.playListItemStyle:id,type',
-        'playListItems.itemMedia.media:id,type,media',
-        'schedules:id,playlist_id,screen_id,group_id,start_time,end_time', // pull only needed cols
-    ])
-    ->where('user_id', 1)
-    ->whereIn('style_id', [2, 3])
-    ->paginate(15);
+    // Pagination params (optional): per_page (1–100), page (>=1)
+    $perPage = 7;
+    $page    = max(1, (int) $request->input('page', 1));
 
-    // Collect all group_ids used in schedules on this page
+    // Main paginated query (only playlists)
+    $playlists = Playlist::with([
+            'planListStyle:id,type',
+            'playListItems.playListItemStyle:id,type',
+            'playListItems.itemMedia.media:id,type,media',
+            'schedules:id,playlist_id,screen_id,group_id,start_time,end_time',
+        ])
+        ->where('user_id', 1)
+        ->whereIn('style_id', [2, 3])
+        ->orderByDesc('id') 
+        ->paginate($perPage, ['*'], 'page', $page);
+
+    // Collect all group_ids used in schedules on THIS PAGE
     $groupIds = [];
     foreach ($playlists->getCollection() as $pl) {
         foreach ($pl->schedules as $s) {
-            if (!empty($s->group_id)) $groupIds[] = $s->group_id;
+            if (!empty($s->group_id)) $groupIds[] = (int) $s->group_id;
         }
     }
     $groupIds = array_values(array_unique($groupIds));
 
-    // Build a map: group_id => array of screen_ids (for this user)
+    // Build map: group_id => [screen_id, ...]  (NO pagination here)
     $groupScreensMap = [];
     if (!empty($groupIds)) {
-        // If you want to restrict by user, add ->where('user_id', 1)
         $rows = UserScreens::query()
             ->select('group_id', 'screen_id')
             ->whereIn('group_id', $groupIds)
-            ->where('user_id', 1) // keep devices belonging to this user
+            ->where('user_id', 1)
             ->get();
 
         foreach ($rows as $r) {
-            $groupScreensMap[$r->group_id][] = (int)$r->screen_id;
+            $gid = (int) $r->group_id;
+            $sid = (int) $r->screen_id;
+            $groupScreensMap[$gid][] = $sid;
         }
 
-        // Deduplicate screen ids per group
         foreach ($groupScreensMap as $gid => $screens) {
             $groupScreensMap[$gid] = array_values(array_unique($screens));
         }
@@ -204,8 +210,9 @@ public function getInteractive(Request $request)
 
     // Helper to normalize schedule time windows (handles TIME or DATETIME + overnight)
     $makeWindow = function ($schedule, Carbon $baseDay) use ($tz) {
-        $startRaw = (string)$schedule->start_time;
-        $endRaw   = (string)$schedule->end_time;
+        $startRaw = (string) $schedule->start_time;
+        $endRaw   = (string) $schedule->end_time;
+
         $isDTs = str_contains($startRaw, ' ') || str_contains($startRaw, 'T');
         $isDTe = str_contains($endRaw,   ' ') || str_contains($endRaw,   'T');
 
@@ -225,19 +232,19 @@ public function getInteractive(Request $request)
     $startOfDay = $now->copy()->startOfDay();
     $endOfDay   = $now->copy()->endOfDay();
 
-    $formatted = $playlists->getCollection()->map(function ($playlist) use ($now, $startOfDay, $endOfDay, $makeWindow, $groupScreensMap) {
+    // Transform paginated items into your formatted payload
+    $playlists->getCollection()->transform(function ($playlist) use ($now, $startOfDay, $endOfDay, $makeWindow, $groupScreensMap) {
         $firstItem  = $playlist->playListItems->first();
         $firstMedia = $firstItem?->itemMedia->first();
 
-        // Build unique screen set for this playlist across all its schedules
+        // Unique screens (direct or via groups)
         $uniqueScreens = [];
-
         foreach ($playlist->schedules as $s) {
             if (!empty($s->screen_id)) {
-                $uniqueScreens[(int)$s->screen_id] = true;
+                $uniqueScreens[(int) $s->screen_id] = true;
             } elseif (!empty($s->group_id)) {
-                foreach ($groupScreensMap[$s->group_id] ?? [] as $sid) {
-                    $uniqueScreens[(int)$sid] = true;
+                foreach (($groupScreensMap[$s->group_id] ?? []) as $sid) {
+                    $uniqueScreens[(int) $sid] = true;
                 }
             }
         }
@@ -272,13 +279,11 @@ public function getInteractive(Request $request)
         return [
             'id'                 => $playlist->id,
             'name'               => $playlist->name,
-            'playListStyle'      => $playlist->planListStyle->type ?? null,
             'duration'           => $playlist->duration,
             'slide_number'       => $playlist->slide_number,
             'media'              => $firstMedia?->media?->media ?? null,
 
-            // NEW
-            'devices_count'      => $devicesCount,   // ✅ number of unique devices scheduled to this playlist
+            'devices_count'      => $devicesCount,
             'is_live'            => $isLive,
             'is_scheduled_today' => $isScheduledToday,
             'next_start'         => $nextStart?->toIso8601String(),
@@ -286,16 +291,19 @@ public function getInteractive(Request $request)
         ];
     });
 
-    $playlists->setCollection($formatted);
-
+    // JSON response with standard pagination meta
     return response()->json([
         'success' => true,
-        'playLists' => $playlists->items(),
+        'playLists' => $playlists->items(), // transformed items for the current page
         'pagination' => [
             'current_page' => $playlists->currentPage(),
             'per_page'     => $playlists->perPage(),
             'total'        => $playlists->total(),
             'last_page'    => $playlists->lastPage(),
+            'next_page_url'=> $playlists->nextPageUrl(),
+            'prev_page_url'=> $playlists->previousPageUrl(),
+            'first_page_url'=> $playlists->url(1),
+            'last_page_url' => $playlists->url($playlists->lastPage()),
         ],
         'now' => $now->toIso8601String(),
     ]);
@@ -398,25 +406,41 @@ public function show(Request $request, $id)
 public function storeNormal(Request $request)
 {
     $request->validate([
-        'name' => 'required|string',
-        'type' => 'required|integer',
-        'ratio' => 'nullable',
-        'NumberOfSlides' => 'required|integer',
-        'total_duration' => 'required|integer',
-        'slides' => 'required|array',
-        'slides.*.duration' => 'required|integer',
-        'slides.*.grid_style' => 'required|integer',
-        'slides.*.index' => 'required|integer',
-        'slides.*.slots' => 'required|array',
-        'slides.*.slots.*.index' => 'required|integer',
-        'slides.*.slots.*.scale' => 'required|string',
+        'name'              => 'required|string|max:255', // 🔹 UPDATED: tightened
+        'type'              => 'required|integer|exists:playlist_style,id', // 🔹 UPDATED: exists
+        'ratio'             => 'nullable', // (left as-is; see note below)
+        'NumberOfSlides'    => 'required|integer|min:1', // 🔹 UPDATED: min
+        'total_duration'    => 'required|integer|min:0', // 🔹 UPDATED: min
+        'slides'            => 'required|array|min:1',   // 🔹 UPDATED: min
+        'slides.*.duration' => 'required|integer|min:0', // 🔹 UPDATED: min
+        'slides.*.grid_style' => 'required|integer|exists:list_item_style,id', // 🔹 UPDATED: exists
+        'slides.*.index'    => 'required|integer|min:0', // 🔹 UPDATED: min
+        'slides.*.slots'    => 'required|array|min:1',   // 🔹 UPDATED: min
+        'slides.*.slots.*.index'     => 'required|integer|min:0', // 🔹 UPDATED: min
+        'slides.*.slots.*.scale'     => 'required|string', // 🔹 keep; enforce enum if you have it
         'slides.*.slots.*.mediaType' => 'nullable|string|in:image,video',
-        'slides.*.slots.*.mediaId' => 'nullable|integer|exists:media,id',
-        'slides.*.slots.*.ImageFile' => 'nullable|required_without:slides.*.slots.*.mediaId|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov,avi|max:20480',
+        'slides.*.slots.*.mediaId'   => 'nullable|integer|exists:media,id',
+        // 🔹 UPDATED: local sibling reference in required_without (don’t repeat the full wildcard path)
+        'slides.*.slots.*.ImageFile' => 'nullable|required_without:mediaId|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov,avi|max:20480',
     ]);
-Log::info(
-    "Request data:\n" . json_encode($request->all(), JSON_PRETTY_PRINT)
-);
+
+    // 🔹 UPDATED: quick request integrity checks before starting DB work
+    if ((int)$request->NumberOfSlides !== count($request->slides)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'NumberOfSlides does not match slides count.',
+        ], 422);
+    }
+    $sumDur = array_sum(array_map(fn($s) => (int)$s['duration'], $request->slides));
+    if ((int)$request->total_duration !== $sumDur) {
+        return response()->json([
+            'success' => false,
+            'message' => 'total_duration does not equal the sum of slide durations.',
+        ], 422);
+    }
+
+    // Keep the same logging
+    Log::info("Request data:\n" . json_encode($request->all(), JSON_PRETTY_PRINT));
 
     $createdFiles = [];
     $user = auth()->user();
@@ -434,17 +458,25 @@ Log::info(
                 // throw new \RuntimeException('No plan found for user.');
             }
 
-            $usedMB = (float) ($userplan->used_storage ?? 0); // already used in MB
+            $usedMB  = (float) ($userplan->used_storage ?? 0); // already used in MB
             $limitMB = (float) ($userplan->storage ?? 0);     // total limit in MB
 
+            // 🔹 UPDATED: safer folder names
+            $safeUser     = \Illuminate\Support\Str::slug($user->name);        // 🔹 UPDATED
+            $safePlaylist = \Illuminate\Support\Str::slug($request->name);     // 🔹 UPDATED
+
+            // 🔹 NOTE: You accept "ratio" but hardcode ratio_id. Keep as-is, but flag it.
             $playlist = Playlist::create([
                 'name'         => $request->name,
                 'user_id'      => $user->id,
                 'style_id'     => $request->type,
-                'ratio_id'     =>1,
+                'ratio_id'     => 1, // 🔹 TODO: map $request->ratio if needed
                 'duration'     => $request->total_duration,
                 'slide_number' => $request->NumberOfSlides,
             ]);
+
+            // 🔹 UPDATED: accumulate usage delta; do ONE plan update at the end
+            $deltaMB = 0.0; // 🔹 UPDATED
 
             foreach ($request->slides as $slideIndex => $slideData) {
                 $slide = PlaylistItem::create([
@@ -455,9 +487,14 @@ Log::info(
                     'index'       => $slideData['index'],
                 ]);
 
+                // 🔹 UPDATED: batch insert media items per slide (fewer round-trips)
+                $mediaItemRows = []; // 🔹 UPDATED
+
                 foreach ($slideData['slots'] as $slotIndex => $slot) {
                     $media_id = $slot['mediaId'] ?? null;
-                    if ($media_id === 'null') $media_id = null;
+                    if ($media_id === 'null') {
+                        $media_id = null;
+                    }
 
                     if (!$media_id && $request->hasFile("slides.$slideIndex.slots.$slotIndex.ImageFile")) {
                         $file = $request->file("slides.$slideIndex.slots.$slotIndex.ImageFile");
@@ -466,13 +503,13 @@ Log::info(
                         $fileSizeMB = round($file->getSize() / 1024 / 1024, 2);
 
                         // Check quota before writing
-                        if ($usedMB + $fileSizeMB > $limitMB) {
+                        if ($usedMB + $deltaMB + $fileSizeMB > $limitMB) { // 🔹 UPDATED: include pending delta
                             throw new \RuntimeException('You have reached your storage limit');
                         }
 
-                        // Store file
-                        $imageName  = Str::random(20) . '.' . $file->getClientOriginalExtension();
-                        $storedPath = $file->storeAs("image/{$user->name}/{$request->name}", $imageName, 'public');
+                        // 🔹 UPDATED: store under "media/..." and use slugged folders
+                        $imageName  = \Illuminate\Support\Str::random(20) . '.' . $file->getClientOriginalExtension();
+                        $storedPath = $file->storeAs("media/{$safeUser}/{$safePlaylist}", $imageName, 'public'); // 🔹 UPDATED
                         if (!$storedPath) {
                             throw new \RuntimeException('Failed to store uploaded file.');
                         }
@@ -483,31 +520,40 @@ Log::info(
                         // Get actual stored size in MB
                         $actualSizeMB = round(filesize($fullPath) / 1024 / 1024, 2);
 
-                        $imageUrl = asset("storage/{$storedPath}");
-
+                        // 🔹 UPDATED: store path in DB (URL can be derived at read time)
                         $createdMedia = Media::create([
-                            'type'      => $slot['mediaType'] ?? 'image',
-                            'user_id'   => $user->id,
-                            'media'     => $imageUrl,
-                            'storage'   => $actualSizeMB, // store MB in DB
+                            'type'    => $slot['mediaType'] ?? 'image',
+                            'user_id' => $user->id,
+                            'media'   => $storedPath, // 🔹 UPDATED: path, not full URL
+                            'storage' => $actualSizeMB, // store MB in DB
                         ]);
 
                         $media_id = $createdMedia->id;
 
-                        // Update usage
-                        $usedMB += $actualSizeMB;
-                        $userplan->update([
-                            'used_storage' => $usedMB
-                        ]);
+                        // 🔹 UPDATED: only accumulate here; single update after loops
+                        $deltaMB += $actualSizeMB; // 🔹 UPDATED
                     }
 
-                    MediaItem::create([
+                    $mediaItemRows[] = [ // 🔹 UPDATED: batch later
                         'playlist_item_id' => $slide->id,
                         'scale'            => $slot['scale'],
                         'index'            => $slot['index'],
                         'media_id'         => $media_id,
-                    ]);
+                        'created_at'       => now(), // 🔹 UPDATED: set timestamps on bulk insert
+                        'updated_at'       => now(),
+                    ];
                 }
+
+                if (!empty($mediaItemRows)) {
+                    MediaItem::insert($mediaItemRows); // 🔹 UPDATED: batch insert
+                }
+            }
+
+            // 🔹 UPDATED: single plan usage update (reduced lock churn)
+            if ($deltaMB > 0) {
+                $userplan->update([
+                    'used_storage' => $usedMB + $deltaMB, // 🔹 UPDATED
+                ]);
             }
 
             return $playlist;
@@ -524,6 +570,9 @@ Log::info(
             @unlink($fullPath);
         }
 
+        // (optional) Log the exception type for better diagnostics
+        Log::error('Playlist create failed: ' . get_class($e) . ' — ' . $e->getMessage()); // 🔹 UPDATED
+
         return response()->json([
             'success' => false,
             'message' => 'Creation failed. No data was saved.',
@@ -531,6 +580,7 @@ Log::info(
         ], 422);
     }
 }
+
 
 
 

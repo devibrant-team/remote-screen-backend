@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('plan_id')->constrained('plans');
             $table->decimal('purchased_at');
-            $table->integer('extra_screens');
             $table->decimal('extra_space');
+            $table->integer('extra_screens');
             $table->integer('num_screen');
+            $table->integer('used_screen');
             $table->decimal('storage');
             $table->decimal('used_storage');
             $table->date('payment_date');

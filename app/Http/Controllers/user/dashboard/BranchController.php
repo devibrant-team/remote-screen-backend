@@ -39,4 +39,31 @@ class BranchController extends Controller
     return response()->json(['success' => true, 'branch' => $branch]);
         
     }
+
+
+    public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+    ]);
+
+    $user = auth()->user();
+
+    if (!$user || !$request->user()->tokenCan('user_dashboard')) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    // Make sure the branch belongs to the authenticated user
+    $branch = Branches::where('id', $id)
+        ->where('user_id', $user->id)
+        ->firstOrFail();
+
+    $branch->update([
+        'name' => $request->name,
+    ]);
+
+    return response()->json([
+        'success' => true,
+    ]);
+}
 }
