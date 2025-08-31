@@ -8,6 +8,7 @@ use App\Http\Controllers\Employee\ScreenController;
 use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
 use App\Http\Controllers\User\dashboard\BranchController;
+use App\Http\Controllers\User\dashboard\GroupsController;
 use App\Http\Controllers\User\dashboard\PlayListController;
 use App\Http\Controllers\User\dashboard\RatioController;
 use App\Http\Controllers\User\dashboard\ScreenManagmentController;
@@ -106,7 +107,7 @@ Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
 // ratio 
 Route::post('/create/screen',[ScreenManagmentController::class,'createScreen']);
 Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
-
+Route::middleware('auth:sanctum')->get('/getsinglescreens',[ScreenManagmentController::class,'getusersinglescreens']);
 
 
 // branch
@@ -119,3 +120,19 @@ Route::middleware('auth:sanctum')->put('/getbranch', [BranchController::class, '
 Route::middleware('auth:sanctum')->get('/getratio', [RatioController::class, 'getRatio']);
 Route::middleware('auth:sanctum')->post('/insertratio', [RatioController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/updateratio', [RatioController::class, 'update']);
+
+// group
+Route::middleware('auth:sanctum')->get('/getgroups', [GroupsController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/insertgroup', [GroupsController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/updategroup/{id}', [GroupsController::class, 'update']);
+Route::middleware('auth:sanctum')->get('/getscreensgroup/{id}', [GroupsController::class, 'getScreensGroup']);
+
+
+
+
+
+Route::post('/broadcasting/auth', function (Request $request) {
+    return response()->json([
+        'auth' => $request->input('channel_name') . ':' . uniqid(),
+    ]);
+});

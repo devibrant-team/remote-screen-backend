@@ -18,6 +18,10 @@ protected $table = 'screens';
 
       public function ratio()
     {
-        return $this->belongsTo(Ratio::class);
+       return $this->belongsTo(Ratio::class, 'ratio_id');
+    }
+   public function branch()
+    {
+        return $this->belongsTo(Branches::class);
     }
 }

@@ -408,7 +408,7 @@ public function storeNormal(Request $request)
     $request->validate([
         'name'              => 'required|string|max:255', // 🔹 UPDATED: tightened
         'type'              => 'required|integer|exists:playlist_style,id', // 🔹 UPDATED: exists
-        'ratio'             => 'nullable', // (left as-is; see note below)
+        'ratio'             => 'required', // (left as-is; see note below)
         'NumberOfSlides'    => 'required|integer|min:1', // 🔹 UPDATED: min
         'total_duration'    => 'required|integer|min:0', // 🔹 UPDATED: min
         'slides'            => 'required|array|min:1',   // 🔹 UPDATED: min
@@ -470,7 +470,7 @@ public function storeNormal(Request $request)
                 'name'         => $request->name,
                 'user_id'      => $user->id,
                 'style_id'     => $request->type,
-                'ratio_id'     => 1, // 🔹 TODO: map $request->ratio if needed
+                'ratio_id'     => $request->ratio, // 🔹 TODO: map $request->ratio if needed
                 'duration'     => $request->total_duration,
                 'slide_number' => $request->NumberOfSlides,
             ]);

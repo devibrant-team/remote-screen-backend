@@ -1,9 +1,0 @@
-Route::post('/screens/{id}/online', function ($id) {
-    DB::table('screens')->where('id', $id)->update(['is_active' => 1]);
-    return response()->json(['status' => 'online']);
-});
-
-Route::post('/screens/{id}/offline', function ($id) {
-    DB::table('screens')->where('id', $id)->update(['is_active' => 0]);
-    return response()->json(['status' => 'offline']);
-});

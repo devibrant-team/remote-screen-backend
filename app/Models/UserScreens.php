@@ -23,10 +23,12 @@ class UserScreens extends Model
 
          public function screen()
 {
-    return $this->belongsTo(Screens::class);
+    return $this->belongsTo(Screens::class, 'screen_id');
 }
-         public function ratio()
+  
+        public function group()
 {
-    return $this->belongsTo(Ratio::class);
+    return $this->belongsTo(Groups::class, 'group_id');
 }
+
 }
