@@ -11,16 +11,9 @@ protected $table = 'screens';
     protected $fillable = [
         'name',
         'code',
-        'platfrom',
+        'platform',
         'is_active',
     ];
 
-      public function ratio()
-    {
-       return $this->belongsTo(Ratio::class, 'ratio_id');
-    }
-   public function branch()
-    {
-        return $this->belongsTo(Branches::class);
-    }
+     
 }

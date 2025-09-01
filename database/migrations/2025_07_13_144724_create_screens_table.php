@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->integer('code')->nullable()->unique();
-            $table->enum('platfrom',['android','windows','android_stick']);
+            $table->enum('platform',['android','windows','android_stick']);
             $table->boolean('is_active');
             $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();

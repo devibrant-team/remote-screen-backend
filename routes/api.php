@@ -105,8 +105,8 @@ Route::get('/getscale', [PlayListController::class, 'getscale']); //should auth
 Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
 
 // ratio 
-Route::post('/create/screen',[ScreenManagmentController::class,'createScreen']);
-Route::post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
+Route::post('/create/screen/{platform}',[ScreenManagmentController::class,'createScreen']);
+Route::middleware('auth:sanctum')->post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
 Route::middleware('auth:sanctum')->get('/getsinglescreens',[ScreenManagmentController::class,'getusersinglescreens']);
 
 

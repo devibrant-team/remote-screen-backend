@@ -34,5 +34,14 @@ class UserScreens extends Model
 {
     return $this->belongsTo(Groups::class, 'group_id');
 }
+  
+   public function ratio()
+    {
+       return $this->belongsTo(Ratio::class, 'ratio_id');
+    }
+   public function branch()
+    {
+        return $this->belongsTo(Branches::class);
+    }
 
 }
