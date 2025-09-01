@@ -11,8 +11,7 @@ protected $table = 'screens';
     protected $fillable = [
         'name',
         'code',
-        'ratio_id',
-        'branch_id',
+        'platfrom',
         'is_active',
     ];
 

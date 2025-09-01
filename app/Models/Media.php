@@ -14,5 +14,6 @@ class Media extends Model
         'storage',
         'user_id',
         'media',
+      	'scale',
     ];
 }

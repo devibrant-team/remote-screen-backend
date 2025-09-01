@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('playlist_item_id')->constrained('playlist_item');
             $table->foreignId('media_id')->constrained('media');
-            $table->enum('scale',['fite','fill','blur','original']);
+            $table->enum('scale',['fit','fill','blur','original']);
             $table->integer('index');
             $table->timestamps();
         });

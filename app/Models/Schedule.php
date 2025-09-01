@@ -16,7 +16,9 @@ class Schedule extends Model
         'screen_id',
         'group_id',
         'start_time',
+      'start_day',
         'end_time',
+      'end_day',
     ];
 
     public function playlist(): BelongsTo

@@ -13,6 +13,10 @@ class UserScreens extends Model
         'screen_id',
         'group_id',
         'is_extra',
+        'ratio_id',
+        'branch_id',
+        'is_assigned',
+      
     ];
 
          public function user()
