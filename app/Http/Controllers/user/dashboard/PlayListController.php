@@ -519,12 +519,12 @@ public function storeNormal(Request $request)
 
                         // Get actual stored size in MB
                         $actualSizeMB = round(filesize($fullPath) / 1024 / 1024, 2);
-
+                        $fullUrl = asset('storage/' . $storedPath);
                         // 🔹 UPDATED: store path in DB (URL can be derived at read time)
                         $createdMedia = Media::create([
                             'type'    => $slot['mediaType'] ?? 'image',
                             'user_id' => $user->id,
-                            'media'   => $storedPath, // 🔹 UPDATED: path, not full URL
+                            'media'   => $fullUrl, // 🔹 UPDATED: path, not full URL
                             'storage' => $actualSizeMB, // store MB in DB
                         ]);
 

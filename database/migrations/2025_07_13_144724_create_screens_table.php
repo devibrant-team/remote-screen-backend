@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->integer('code')->nullable()->unique();
-            $table->foreignId('ratio_id')->nullable()->constrained('ratio');
-            $table->foreignId('branch_id')->nullable()->constrained('branches');
+            $table->enum('platfrom',['android','windows','android_stick']);
             $table->boolean('is_active');
             $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();

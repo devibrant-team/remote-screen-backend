@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('group_id')->nullable()->constrained('groups');
             $table->dateTime('start_time');
             $table->dateTime('end_time');
+            $table->dateTime('start_day');
+            $table->dateTime('end_day');
             $table->timestamps();
         });
     }

@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->foreignId('screen_id')->nullable()->constrained('screens');
             $table->foreignId('group_id')->nullable()->constrained('groups');
+            $table->foreignId('ratio_id')->nullable()->constrained('ratio');
+            $table->foreignId('branch_id')->nullable()->constrained('branches');
+            $table->boolean('is_assigned')->default(0);
             $table->boolean('is_extra');
             $table->timestamps();
         });
