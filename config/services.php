@@ -21,6 +21,10 @@ return [
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],
+  
+    'api_keys' => [
+    'list_users' => env('LIST_USERS_API_KEY'),
+   ],
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),

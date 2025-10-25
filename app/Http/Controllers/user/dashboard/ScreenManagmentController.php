@@ -9,9 +9,12 @@ use App\Models\Ratio;
 use App\Models\Screens;
 use App\Models\UserScreens;
 use App\Models\UserPlan;
+use App\Models\Schedule;
+use App\Models\ScheduleDetails;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ScreenManagmentController extends Controller
 {
@@ -85,8 +88,9 @@ class ScreenManagmentController extends Controller
     }
 
 
-public function createScreen(Request $request, $platform)
+public function createScreen(Request $request)
 {
+  
     do {
         // Generate a random 6-digit number
         $code = mt_rand(100000, 999999);
@@ -96,7 +100,7 @@ public function createScreen(Request $request, $platform)
         'name' => 'newRegistered',
         'code' => $code,
         'is_active' => 0,
-        'platform'=>$platform
+        'platform'=>'android',
     ]);
 
     return response()->json($screen);
@@ -210,39 +214,104 @@ public function addScreen(Request $request)
     }
 
   
-  public function getusersinglescreens(Request $request){
-
+public function getusersinglescreens(Request $request)
+{
     $user = auth()->user();
-
     if (!$user || !$request->user()->tokenCan('user_dashboard')) {
         return response()->json(['error' => 'Unauthorized'], 401);
     }
-    
-    $screens=UserScreens::where('user_id',$user->id)->with(['screen:id,name,is_active,platform,last_seen_at','ratio:id,ratio','branch:id,name'])->get();
-if (!$screens) {
-    return response()->json([
-        'error' => 'No Linked Screens yet'
-    ], 401);
-}
-    
-     $formattedData = $screens->map(function ($playlist) {
+
+    // How many future days to include? (default 14, clamp 1..60)
+    $days = (int) $request->query('days', 14);
+    $days = max(1, min($days, 60));
+
+    // Time window [today .. today+days]
+    $tz        = config('app.timezone', 'UTC'); // your app likely 'Asia/Beirut'
+    $startDate = Carbon::now($tz)->startOfDay();
+    $endDate   = (clone $startDate)->addDays($days);
+
+    // 1) Get user-linked screens
+    $screens = UserScreens::where('user_id', $user->id)
+        ->with([
+            'screen:id,name,is_active,platform,last_seen_at',
+            'ratio:id,ratio',
+            'branch:id,name',
+        ])
+        ->get();
+
+    if ($screens->isEmpty()) {
+        return response()->json(['error' => 'No Linked Screens yet'], 404);
+    }
+
+    // Collect the underlying screen IDs
+    $screenIds = $screens->pluck('screen_id')->filter()->values();
+
+    // 2) Pull upcoming schedules for these screens in one go
+    // Overlap condition: schedule.start_day <= endDate AND schedule.end_day >= startDate
+    $schedules = Schedule::query()
+        ->where('user_id', $user->id)
+        ->whereDate('start_day', '<=', $endDate->toDateString())
+        ->whereDate('end_day', '>=', $startDate->toDateString())
+        ->whereHas('details', function ($q) use ($screenIds) {
+            $q->whereIn('screen_id', $screenIds);
+        })
+        ->with([
+            'details' => function ($q) use ($screenIds) {
+                $q->whereIn('screen_id', $screenIds)
+                  ->select('id', 'schedule_id', 'screen_id');
+            },
+            // if you want playlist name in the payload, keep this and map it below
+            'playlist:id,name',
+        ])
+        ->get([
+            'id', 'user_id', 'playlist_id', 'group_id',
+            'start_time', 'end_time', 'start_day', 'end_day',
+        ]);
+
+    // 3) Bucket schedules by screen_id
+    $byScreen = [];
+    foreach ($schedules as $sch) {
+        foreach ($sch->details as $det) {
+            $byScreen[$det->screen_id][] = [
+                'scheduleId' => $sch->id,
+                'playlistId' => $sch->playlist_id,
+                'playlistName' => optional($sch->playlist)->name,
+                'groupId'   => $sch->group_id,
+                'startDay'  => $sch->start_day,   // DATE (YYYY-MM-DD)
+                'endDay'    => $sch->end_day,     // DATE (YYYY-MM-DD)
+                'startTime' => $sch->start_time,  // HH:MM:SS
+                'endTime'   => $sch->end_time,    // HH:MM:SS
+            ];
+        }
+    }
+
+    // 4) Format response
+    $formatted = $screens->map(function ($row) use ($byScreen) {
+        $screenId = $row->screen_id;
+
         return [
-            'id' => $playlist->id,
-          	'screenId' => $playlist->screen->id,
-            'screenName' => $playlist->screen->name,
-            'ratio' =>optional(optional($playlist->ratio))->ratio,
-            'branchName' => optional(optional($playlist->branch))->name,
-   			'active'=>$playlist->screen->is_active,
-          	'lastSeen'=>$playlist->screen->last_seen_at,
+            'id'         => $row->id,
+            'screenId'   => optional($row->screen)->id,
+            'screenName' => optional($row->screen)->name,
+            'ratio'      => optional($row->ratio)->ratio,
+            'ratioId'      => optional($row->ratio)->id,
+            'branchName' => optional($row->branch)->name,
+            'active'     => optional($row->screen)->is_active,
+            'lastSeen'   => optional($row->screen)->last_seen_at,
+            // attach upcoming schedules for this screen
+            'schedules'  => array_values($byScreen[$screenId] ?? []),
         ];
     });
+
     return response()->json([
-                'success' => true,
-                'screens' => $formattedData,
-            ]);
-    
-  
-  }
+        'success' => true,
+        'screens' => $formatted,
+        'window'  => [
+            'from' => $startDate->toDateString(),
+            'to'   => $endDate->toDateString(),
+        ],
+    ]);
+}
   
   
     

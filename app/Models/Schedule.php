@@ -25,5 +25,7 @@ class Schedule extends Model
     {
         return $this->belongsTo(Playlist::class, 'playlist_id', 'id');
     }
+  
+  public function details() { return $this->hasMany(ScheduleDetails::class, 'schedule_id'); }
     
 }

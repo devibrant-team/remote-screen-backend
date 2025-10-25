@@ -53,7 +53,7 @@ class RatioController extends Controller
 
     $ratio=Ratio::create([
         'width'=>$request->width,
-        'heigtht'=>$request->heigtht,
+        'height'=>$request->height,
         'ratio' => "{$request->numerator}:{$request->denominator}",
         'numerator'=>$request->numerator,
         'denominator'=>$request->denominator,

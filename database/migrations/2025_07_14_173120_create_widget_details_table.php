@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('widget_details', function (Blueprint $table) {
             $table->id();
-            $table->enum('type',['oclock','weather']);
+            $table->enum('type',['clock','weather']);
             $table->string('city');
-            $table->enum('position',['center','top_right','top_left','bottom_right','bottom_left','center_right','center_left']);
+            $table->enum('position',['center','top-right','top-left','bottom-right','bottom-left','center-right','center-left']);
             $table->timestamps();
         });
     }

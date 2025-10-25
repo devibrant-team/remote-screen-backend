@@ -46,6 +46,14 @@ return [
             'throw' => false,
             'report' => false,
         ],
+      
+        'private' => [
+        'driver' => 'local',
+        'root' => storage_path('app/private'), // ملفات خاصة: ليست تحت public
+        'throw' => true,
+        // "visibility" لا تؤثر مع local، بس ما فيها ضرر:
+        'visibility' => 'private',
+    ],
 
         's3' => [
             'driver' => 's3',

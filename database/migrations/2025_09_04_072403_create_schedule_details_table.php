@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('media', function (Blueprint $table) {
+        Schema::create('schedule_details', function (Blueprint $table) {
             $table->id();
-            $table->enum('type',['image','video','gif']);
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('media');
-            $table->decimal('storage');
-            $table->timestamps();
+          	$table->foreignId('schedule_id')->nullable()->constrained('schedule');
+            $table->foreignId('screen_id')->constrained('screens');            
         });
     }
 
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('media');
+        Schema::dropIfExists('schedule_details');
     }
 };

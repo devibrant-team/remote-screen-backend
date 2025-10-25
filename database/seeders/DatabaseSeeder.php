@@ -69,7 +69,16 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name'=> 'Tala',
             'email'=> 't@gmail.com',
-            'password' => Hash::make('123456')
+            'password' => Hash::make('123456'),
+            'country'=>'Lebanone'
+        ]);
+      
+      
+      User::create([
+            'name'=> 'User A',
+            'email'=> 'user@gmail.com',
+            'password' => Hash::make('123456'),
+            'country'=>'Lebanone'
         ]);
 
         Ratio::create([
@@ -92,6 +101,23 @@ class DatabaseSeeder extends Seeder
 
         UserPlan::create([
             'user_id'=>1,
+            'plan_id'=>1,
+            'purchased_at' =>1000,
+            'extra_space' => 0,
+            'extra_screens' =>0,
+            'num_screen' =>10,
+            'used_screen'=>0,
+            'storage'=>1000,
+            'used_storage'=>0,
+            'payment_date'=>'2025-09-01',
+            'expire_date'=>'2025-09-30',
+            'payment_type'=>'visa',
+        ]);
+      
+      
+      
+      UserPlan::create([
+            'user_id'=>2,
             'plan_id'=>1,
             'purchased_at' =>1000,
             'extra_space' => 0,

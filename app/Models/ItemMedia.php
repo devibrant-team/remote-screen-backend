@@ -12,11 +12,17 @@ class ItemMedia extends Model
         'playlist_item_id',
         'media_id',
         'scale',
-        'index'
+        'index',
+		'widget_id'
     ];
 
      public function media()
     {
         return $this->belongsTo(Media::class, 'media_id');
+    }
+  
+   public function widget()
+    {
+        return $this->belongsTo(WidgetDetails::class, 'widget_id');
     }
 }

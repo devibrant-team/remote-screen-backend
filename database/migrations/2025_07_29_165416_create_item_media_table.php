@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('item_media', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('playlist_item_id')->constrained('playlist_item');
+            $table->foreignId('playlist_item_id')->constrained('playlist_item')->onDelete('cascade');
             $table->foreignId('media_id')->constrained('media');
-            $table->enum('scale',['fit','fill','blur','original']);
+            $table->foreignId('widget_id')->nullable()->constrained('widget_details');
+            $table->enum('scale',['fit','fill','blur','original','normal']);
             $table->integer('index');
             $table->timestamps();
         });

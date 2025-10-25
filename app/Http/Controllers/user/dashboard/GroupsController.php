@@ -8,6 +8,9 @@ use App\Models\UserScreens;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Str;
 
 class GroupsController extends Controller
 {
@@ -89,12 +92,11 @@ public function store(Request $request)
                 // (B) If group has a ratio, enforce screen ratio match
                 if (!is_null($group->ratio_id)) {
                     // load each screen's ratio_id
-                    $screensWithRatio = DB::table('user_screens as us')
-                        ->join('screens as s', 's.id', '=', 'us.screen_id')
-                        ->where('us.user_id', $user->id)
-                        ->whereIn('us.screen_id', $screenIds)
-                        ->select('us.screen_id', 's.ratio_id as screen_ratio_id')
-                        ->get();
+                   $screensWithRatio = DB::table('user_screens as us')
+    ->where('us.user_id', $user->id)
+    ->whereIn('us.screen_id', $screenIds)
+    ->select('us.screen_id', 'us.ratio_id as screen_ratio_id')
+    ->get();
 
                     // find mismatches (null or different)
                     $mismatched = $screensWithRatio
@@ -195,10 +197,10 @@ public function store(Request $request)
                 ->where('user_id', $user->id)
                 ->where('group_id', $id)
                 ->with([
-                    'screen:id,name,branch_id,ratio_id',
-                    'screen.branch:id,name',
-                    'screen.ratio:id,ratio', // <- assumes user_screens.ratio_id exists
-                ])
+  'ratio:id,ratio',
+  'branch:id,name',
+  'screen:id,name',
+])
                 ->get();
 
             // Return empty list (not an error) when no records
@@ -214,8 +216,8 @@ public function store(Request $request)
                 return [
                     'id'         => $us->id,
                     'name'       => optional($us->screen)->name,
-                    'branchName' => optional(optional($us->screen)->branch)->name,
-                    'ratio'      =>  optional(optional($us->screen)->ratio)->ratio,
+                    'branchName' => optional(optional($us->branch))->name,
+                    'ratio'      =>  optional(optional($us->ratio))->ratio,
                 ];
             });
 
@@ -237,6 +239,75 @@ public function store(Request $request)
         }
     }
 
+  private function normalizePublicDiskPath(?string $raw): string
+{
+    if (!$raw) return '';
+
+    // If it's a full URL, keep only the path part
+    $urlPath = parse_url($raw, PHP_URL_PATH) ?: $raw;
+    $urlPath = ltrim($urlPath, '/'); // strip leading slash
+
+    // If it begins with "storage/", drop it because the symlink already points there
+    if (Str::startsWith($urlPath, 'storage/')) {
+        $urlPath = Str::after($urlPath, 'storage/');
+    }
+
+    // Now accept only paths that start with "file/"
+    if (Str::startsWith($urlPath, 'file/')) {
+        return $urlPath; // e.g. "file/dxEgoY4Ji5FLc0W9....webm"
+    }
+
+    // If the DB held only the filename, prepend "file/" (optional rule)
+    // return 'file/' . basename($urlPath);
+
+    // Otherwise, reject unexpected roots for safety
+    return '';
+}
+  
+  
+
+    public function publicDownload(Request $request)
+{
+    $saudi = $request->user();
+
+    if (!$saudi || !$request->user()->currentAccessToken() || $request->user()->currentAccessToken()->name !== 'saudi-api') {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+	
+      
+      
+    $path = Str::after($saudi->media_path, 'storage/');
+	
+    // Validate path
+    if ($path === '' || str_contains($path, '..')) {
+        return response()->json(['error' => 'Invalid path'], 400);
+    }
+
+    // Check file existence
+    if (!Storage::disk('public')->exists($path)) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    // Get full absolute path
+    $absolute = Storage::disk('public')->path($path);
+    $filename = basename($absolute);
+
+    // Return file as a download
+    return response()->download(
+        $absolute,
+        $filename,
+        [
+            'Content-Type'        => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+        ]
+    );
+}
+
+  
+  
   
 
 

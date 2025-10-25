@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('schedule', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('playlist_id')->constrained('playlist');
-            $table->foreignId('screen_id')->nullable()->constrained('screens');
+            $table->foreignId('playlist_id')->constrained('playlist')->onDelete('cascade');
             $table->foreignId('group_id')->nullable()->constrained('groups');
             $table->dateTime('start_time');
             $table->dateTime('end_time');

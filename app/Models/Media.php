@@ -10,7 +10,6 @@ class Media extends Model
 
     protected $fillable = [
         'type',
-        'widget_id',
         'storage',
         'user_id',
         'media',

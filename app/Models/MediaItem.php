@@ -13,6 +13,7 @@ class MediaItem extends Model
         'media_id',
         'scale',
         'index',
+       'widget_id'
     ];
 
 }

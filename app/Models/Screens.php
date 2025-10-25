@@ -15,5 +15,5 @@ protected $table = 'screens';
         'is_active',
     ];
 
-     
+     public function scheduleDetails() { return $this->hasMany(ScheduleDetails::class, 'screen_id'); }
 }

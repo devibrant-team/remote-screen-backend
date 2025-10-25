@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('playlist_item', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('playlist_id')->constrained('playlist');
+            $table->foreignId('playlist_id')->constrained('playlist')->onDelete('cascade');
             $table->foreignId('grid_id')->constrained('list_item_style');
             $table->enum('transition',['fade']);
             $table->integer('index');

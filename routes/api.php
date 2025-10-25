@@ -5,11 +5,14 @@ use App\Http\Controllers\Employee\AuthController;
 use App\Http\Controllers\Employee\CustomController;
 use App\Http\Controllers\Employee\PlanController;
 use App\Http\Controllers\Employee\ScreenController;
+use App\Http\Controllers\User\dashboard\MediaController;
 use App\Http\Controllers\Employee\UserDataController;
 use App\Http\Controllers\User\dashboard\AuthController as DashboardAuthController;
 use App\Http\Controllers\User\dashboard\BranchController;
 use App\Http\Controllers\User\dashboard\GroupsController;
+use App\Http\Controllers\User\dashboard\ScheduleController;
 use App\Http\Controllers\User\dashboard\PlayListController;
+use App\Http\Controllers\User\dashboard\NormalPlayListController;
 use App\Http\Controllers\User\dashboard\RatioController;
 use App\Http\Controllers\User\dashboard\ScreenManagmentController;
 use App\Http\Controllers\User\dashboard\StylesController;
@@ -17,6 +20,8 @@ use App\Http\Controllers\User\portfolio\AuthController as PortfolioAuthControlle
 use App\Http\Controllers\user\portfolio\PlanUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -89,23 +94,27 @@ Route::get('/getplaylistStyle', [StylesController::class, 'getPlayListStyle']); 
 Route::get('/getgridStyle', [StylesController::class, 'getGridStyle']); //should auth
 
 
-Route::get('/getuser/playlistnormal', [PlayListController::class, 'getNormal']); //should auth
-Route::get('/getuser/playlistinteractive', [PlayListController::class, 'getInteractive']); //should auth
+Route::middleware('auth:sanctum')->get('/getuser/playlistnormal', [NormalPlayListController::class, 'getNormal']); //should auth
+
+Route::middleware('auth:sanctum')->get('/getuser/playlistinteractive', [PlayListController::class, 'getInteractive']); //should auth
 
 
 // playlist item 
-Route::post('/postinteractive', [PlayListController::class, 'storeInteractive']);
+Route::middleware('auth:sanctum')->post('/postinteractive', [PlayListController::class, 'storeInteractive']);
 
-Route::middleware('auth:sanctum')->post('/postNormal', [PlayListController::class, 'storeNormal']);
-
-
-Route::middleware('auth:sanctum')->get('/getuser/media', [PlayListController::class, 'getMedia']); //should auth
+Route::middleware('auth:sanctum')->post('/postNormal', [NormalPlayListController::class, 'storeNormal']);
+Route::middleware('auth:sanctum')->post('/updatenormal/{playlistId}', [NormalPlayListController::class, 'updateNormal']);
+Route::middleware('auth:sanctum')->post('/updateinteravtive/{playlistId}', [PlayListController::class, 'updateInteractive']);
+Route::middleware('auth:sanctum')->get('/getuser/media', [MediaController::class, 'getMedia']); //should auth
+Route::middleware('auth:sanctum')->post('/postmedia', [MediaController::class, 'store']); 
+Route::middleware('auth:sanctum')->delete('/deletemedia/{id}', [MediaController::class, 'destroy']); 
 Route::get('/getscale', [PlayListController::class, 'getscale']); //should auth
 
-Route::get('/playlist/{id}', [PlaylistController::class, 'show']);
-
+Route::middleware('auth:sanctum')->get('/playlistdetails/{id}', [PlaylistController::class, 'show']);
+Route::middleware('auth:sanctum')->delete('/deleteplaylist/{id}', [PlaylistController::class, 'destroy']);
 // ratio 
-Route::post('/create/screen/{platform}',[ScreenManagmentController::class,'createScreen']);
+Route::post('/create/screen', [ScreenManagmentController::class, 'createScreen'])
+    ->middleware('throttle:100,20');
 Route::middleware('auth:sanctum')->post('/adduser/screen',[ScreenManagmentController::class,'addScreen']);
 Route::middleware('auth:sanctum')->get('/getsinglescreens',[ScreenManagmentController::class,'getusersinglescreens']);
 
@@ -127,8 +136,17 @@ Route::middleware('auth:sanctum')->post('/insertgroup', [GroupsController::class
 Route::middleware('auth:sanctum')->put('/updategroup/{id}', [GroupsController::class, 'update']);
 Route::middleware('auth:sanctum')->get('/getscreensgroup/{id}', [GroupsController::class, 'getScreensGroup']);
 
+//schedule 
 
 
+
+Route::get('/qr-download', [GroupsController::class, 'publicDownload'])
+     ->middleware('auth:sanctum');
+
+
+Route::get('/ping', fn () => 'pong');
+
+Route::middleware('auth:sanctum')->post('/postschedule', [ScheduleController::class, 'store']);
 
 
 Route::post('/broadcasting/auth', function (Request $request) {
@@ -136,3 +154,25 @@ Route::post('/broadcasting/auth', function (Request $request) {
         'auth' => $request->input('channel_name') . ':' . uniqid(),
     ]);
 });
+
+Route::get('/download/{filename}', function ($filename) {
+    $path = 'media/user-a-2/interactive/asdasd/' . $filename;
+
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return response()->download(Storage::disk('public')->path($path));
+});
+
+
+Route::post('/postimage', [MediaController::class, 'imageupload']); 
+
+
+
+
+Route::middleware('auth:sanctum')->get('/dashboard/schedules', [ScheduleController::class, 'index']);
+
+
+
+
